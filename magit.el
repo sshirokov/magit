@@ -4094,6 +4094,29 @@ This is only meaningful in wazzup buffers.")
 
 ;;; Miscellaneous
 
+(defun magit-path-on-branch (branch)
+  (interactive (list
+                (magit-read-rev "Where from")))
+
+  (let* ((path (or (buffer-file-name) (error "No file in buffer")))
+         (git-dir (or (magit-get-top-dir (file-name-directory path)) (error "Not a git directory")))
+         (path (replace-regexp-in-string git-dir "" path nil t))
+         (data (magit-git-string "show" (format "%s:%s" branch path)))
+
+         (mode major-mode)
+         (name (format "*%s:%s*" branch path))
+         (buffer (get-buffer-create name)))
+
+    (display-buffer buffer t)
+    (with-current-buffer buffer
+      (toggle-read-only 0)
+      (erase-buffer)
+      (funcall mode)
+      (insert data)
+      (toggle-read-only 1))
+    git-dir))
+
+
 (defun magit-ignore-file (file edit local)
   (let ((ignore-file (if local ".git/info/exclude" ".gitignore")))
     (if edit
